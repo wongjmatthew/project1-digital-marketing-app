@@ -1,2 +1,2 @@
-# project1-digital-marketing-app
-Digital marketing client management app built with Streamlit and PostgreSQL
+Power Digital: Digital Account Management System (DAMS)
+Live App URL: (https://project1-digital-marketing-app-eh9uzejiptfjf72bw39lrn.streamlit.app/)
