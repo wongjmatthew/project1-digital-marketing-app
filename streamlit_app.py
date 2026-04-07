@@ -9,7 +9,7 @@ st.set_page_config(page_title="DAMS Dashboard", page_icon="📈", layout="wide")
 def get_connection():
     return psycopg2.connect(st.secrets["DB_URL"])
 
-st.title("📈 Power Digital: Executive Dashboard")
+st.title("📈 Executive Dashboard")
 st.write("Welcome to the Digital Account Management System (DAMS).")
 
 try:
