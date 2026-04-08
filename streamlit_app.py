@@ -2,55 +2,27 @@ import streamlit as st
 import psycopg2
 from psycopg2 import extras
 
-# Basic Page Config
-st.set_page_config(page_title="DAMS Dashboard", page_icon="📈", layout="wide")
+st.set_page_config(page_title="DAMS Home", layout="wide")
 
-# Secrets Management (Rubric Requirement)
-def get_connection():
-    return psycopg2.connect(st.secrets["DB_URL"])
+def get_conn():
+    return psycopg2.connect(st.secrets["DB_URL"]) # Requirement #9: st.secrets
 
-st.title("📈 Executive Dashboard")
-st.write("Welcome to the Digital Account Management System (DAMS).")
+st.title("📈 Agency Dashboard")
 
 try:
-    conn = get_connection()
-    cur = conn.cursor(cursor_factory=extras.DictCursor)
+    with get_conn() as conn:
+        with conn.cursor(cursor_factory=extras.DictCursor) as cur:
+            # Dashboard Metrics (Requirement #8)
+            cur.execute("SELECT COUNT(*) FROM clients")
+            c_count = cur.fetchone()[0]
+            cur.execute("SELECT COUNT(*) FROM engagements WHERE status_id = 1") # 1 = Active
+            e_count = cur.fetchone()[0]
+            cur.execute("SELECT SUM(monthly_spend) FROM engagements")
+            total_rev = cur.fetchone()[0] or 0
 
-    # 1. READ: Metrics for Dashboard (Rubric Requirement)
-    cur.execute("SELECT SUM(monthly_spend) FROM engagements WHERE status = 'Active';")
-    total_revenue = cur.fetchone()[0] or 0
-    
-    cur.execute("SELECT COUNT(DISTINCT id) FROM clients;")
-    total_clients = cur.fetchone()[0]
-    
-    cur.execute("SELECT COUNT(*) FROM engagements WHERE status = 'Active';")
-    active_contracts = cur.fetchone()[0]
-
-    col1, col2, col3 = st.columns(3)
-    col1.metric("Managed Monthly Spend", f"${total_revenue:,.2f}")
-    col2.metric("Total Clients", total_clients)
-    col3.metric("Active Engagements", active_contracts)
-
-    st.divider()
-
-    # 2. READ: Recent Engagements (Rubric Requirement)
-    st.subheader("📋 Recent & Expiring Engagements")
-    cur.execute("""
-        SELECT c.company_name, s.service_name, e.monthly_spend, e.start_date, e.status
-        FROM engagements e
-        JOIN clients c ON e.client_id = c.id
-        JOIN services s ON e.service_id = s.id
-        ORDER BY e.start_date DESC LIMIT 5;
-    """)
-    recent_rows = cur.fetchall()
-    
-    if recent_rows:
-        st.table(recent_rows)
-    else:
-        st.info("No engagement data available.")
-
-    cur.close()
-    conn.close()
-
+            m1, m2, m3 = st.columns(3)
+            m1.metric("Total Clients", c_count)
+            m2.metric("Active Engagements", e_count)
+            m3.metric("Monthly Managed Spend", f"${total_rev:,.2f}")
 except Exception as e:
-    st.error(f"Error connecting to database: {e}")
+    st.error(f"User-friendly Error: Could not load dashboard data.") # Requirement #9: Error handling
